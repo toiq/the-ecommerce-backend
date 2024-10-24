@@ -6,6 +6,8 @@ import {
   login,
   refresh,
   logout,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/authController.js";
 import errorHandler from "../handlers/error-handler.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
@@ -29,5 +31,11 @@ authRouter.post("/refresh", [authMiddleware("REFRESH")], errorHandler(refresh));
 
 // Logout user
 authRouter.post("/logout", [authMiddleware("REFRESH")], errorHandler(logout));
+
+// Forgot password
+authRouter.post("/forgot-password", errorHandler(forgotPassword));
+
+// Forgot password
+authRouter.post("/reset-password/:userId/:token", errorHandler(resetPassword));
 
 export default authRouter;

@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
 import prismaClient from "../dbclients/prismaClient.js";
-import { LoginSchema, RegisterSchema } from "../schema/userSchema.js";
+import {
+  ForgotPasswordSchema,
+  LoginSchema,
+  RegisterSchema,
+  ResendVerifyEmailSchema,
+  ResetPasswordSchema,
+} from "../schema/userSchema.js";
 import { BadRequestException } from "../exceptions/bad-request.js";
 import { ErrorCode } from "../exceptions/root.js";
 import {
@@ -10,24 +16,26 @@ import {
 import {
   decodeVerificationToken,
   generateAccessToken,
+  generatePasswordResetToken,
   generateRefreshToken,
   generateVerificationToken,
 } from "../utils/jwt.js";
 import { env } from "../config/env.js";
 import {
+  decodePasswordResetToken,
   deleteUserRefreshToken,
   deleteUserSignUpCache,
   getUserSignUpCache,
   setUserRefreshToken,
   setUserSignUpCache,
+  updateUserPassword,
 } from "../services/userService.js";
 import { sendVerificationEmail } from "../utils/email.js";
 import { NotFoundException } from "../exceptions/not-found.js";
+import { UnauthorizedException } from "../exceptions/unauthorized.js";
 
 export const register = async (req: Request, res: Response) => {
-  const validatedData = RegisterSchema.parse(req.body);
-  const { name, email, password } = validatedData;
-
+  const { name, email, password } = RegisterSchema.parse(req.body);
   const user = await prismaClient.user.findFirst({ where: { email } });
 
   if (user) {
@@ -101,7 +109,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
 };
 
 export const resendVerifyEmail = async (req: Request, res: Response) => {
-  const { email } = req.body;
+  const { email } = ResendVerifyEmailSchema.parse(req.body);
   const userCache = await getUserSignUpCache(email);
   if (!userCache) {
     throw new BadRequestException("Invalid request", ErrorCode.EMAIL_NOT_FOUND);
@@ -119,8 +127,8 @@ export const resendVerifyEmail = async (req: Request, res: Response) => {
 };
 
 export const login = async (req: Request, res: Response) => {
-  const validatedData = LoginSchema.parse(req.body);
-  const { email, password } = validatedData;
+  const { email, password } = LoginSchema.parse(req.body);
+
   const user = await prismaClient.user.findUnique({ where: { email } });
 
   if (!user) {
@@ -173,5 +181,57 @@ export const logout = async (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     message: `${email} is logged out.`,
+  });
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = ForgotPasswordSchema.parse(req.body);
+  const user = await prismaClient.user.findFirst({
+    where: {
+      email,
+    },
+  });
+  if (!user)
+    throw new NotFoundException(
+      `User with email: ${email} not found.`,
+      ErrorCode.USER_NOT_FOUND
+    );
+
+  const token = generatePasswordResetToken(email, user.password);
+  const resetLink = `${env.BACKEND_HOST}/api/auth/reset/${user.id}/${token}`;
+
+  await sendVerificationEmail(email, resetLink);
+
+  res.status(200).json({
+    success: true,
+    message: `Email has been sent to ${email}`,
+  });
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { password: newPassword } = ResetPasswordSchema.parse(req.body);
+  const { userId, token } = req.params;
+  const hashedPassword = await generateHashedPassword(newPassword);
+  const user = await prismaClient.user.findFirst({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user)
+    throw new UnauthorizedException("Invalid user.", ErrorCode.USER_NOT_FOUND);
+  const decoded = decodePasswordResetToken(token, user.password);
+  if (!decoded)
+    throw new BadRequestException("Invalid token", ErrorCode.INVALID_TOKEN);
+  const { email, id, role } = await updateUserPassword(userId, hashedPassword);
+  const accessToken = await generateAccessToken(email, id, role);
+  const refreshToken = await generateRefreshToken(email, id, role);
+  await setUserRefreshToken(email, refreshToken);
+  res.status(200).json({
+    success: true,
+    message: {
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    },
   });
 };

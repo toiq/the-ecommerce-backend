@@ -2,8 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { UnauthorizedException } from "../exceptions/unauthorized.js";
 import { ErrorCode } from "../exceptions/root.js";
-import prismaClient from "../dbclients/prismaClient.js";
 import { env } from "../config/env.js";
+import { getUserRefreshToken } from "../services/userService.js";
 
 const authMiddleware =
   (tokenType: "ACCESS" | "REFRESH") =>
@@ -23,14 +23,11 @@ const authMiddleware =
           : env.REFRESH_TOKEN_SECRET
       );
 
+      const tokenCache = await getUserRefreshToken(payload.email);
+
       console.log({ payload });
-      const user = await prismaClient.user.findFirst({
-        where: { id: payload.id },
-      });
 
-      console.log({ payload, user });
-
-      if (!user) {
+      if (tokenCache !== token) {
         return next(
           new UnauthorizedException(
             "Unauthorized",
@@ -38,7 +35,7 @@ const authMiddleware =
           )
         );
       } else {
-        req.user = user;
+        req.user = payload;
         next();
       }
     } catch (error) {

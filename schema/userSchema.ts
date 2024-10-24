@@ -3,10 +3,22 @@ import { z } from "zod";
 export const RegisterSchema = z.object({
   name: z.string(),
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(8),
 });
 
 export const LoginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(8),
+});
+
+export const ResendVerifyEmailSchema = z.object({
+  email: z.string(),
+});
+
+export const ForgotPasswordSchema = z.object({
+  email: z.string(),
+});
+
+export const ResetPasswordSchema = z.object({
+  password: z.string().min(8),
 });

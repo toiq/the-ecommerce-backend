@@ -2,6 +2,8 @@ import { z } from "zod";
 import { RegisterSchema } from "../schema/userSchema.js";
 import cacheClient from "../dbclients/cacheClient.js";
 import { env } from "../config/env.js";
+import jwt from "jsonwebtoken";
+import prismaClient from "../dbclients/prismaClient.js";
 
 export const setUserSignUpCache = async (
   email: string,
@@ -27,6 +29,32 @@ export const getUserSignUpCache = async (email: string) => {
     return null;
   }
   return JSON.parse(cacheData);
+};
+
+export const getUserRefreshToken = async (email: string) => {
+  return await cacheClient.get(email);
+};
+
+export const decodePasswordResetToken = (
+  passwordResetToken: string,
+  currentPassword: string
+) => {
+  const secret = env.VERIFICATION_SECRET + currentPassword;
+  return jwt.verify(passwordResetToken, secret);
+};
+
+export const updateUserPassword = async (
+  userId: string,
+  newPassword: string
+) => {
+  return await prismaClient.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      password: newPassword,
+    },
+  });
 };
 
 export const deleteUserSignUpCache = async (email: string) => {

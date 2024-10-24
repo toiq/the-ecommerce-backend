@@ -29,6 +29,18 @@ export const generateVerificationToken = (email: string) => {
   return token;
 };
 
+export const generatePasswordResetToken = (
+  email: string,
+  oldPassword: string
+) => {
+  const payload = { email: email };
+  // Same secret and ttl as verification
+  const secret = env.VERIFICATION_SECRET + oldPassword;
+  const options = { expiresIn: env.VERIFICATION_TTL };
+  const token = jwt.sign(payload, secret, options);
+  return token;
+};
+
 export const decodeVerificationToken = (verificationToken: string) => {
   return jwt.verify(verificationToken, env.VERIFICATION_SECRET) as z.infer<
     typeof RegisterSchema
