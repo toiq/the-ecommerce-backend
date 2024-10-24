@@ -12,11 +12,11 @@ export const LoginSchema = z.object({
 });
 
 export const ResendVerifyEmailSchema = z.object({
-  email: z.string(),
+  email: z.string().email(),
 });
 
 export const ForgotPasswordSchema = z.object({
-  email: z.string(),
+  email: z.string().email(),
 });
 
 export const ResetPasswordSchema = z.object({
