@@ -2,11 +2,12 @@
   "name": "the-ecommerce-backend",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/server.js",
+  "main": "server.js",
+  "type": "module",
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/server.js",
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch server.ts"
   },
   "keywords": [],
   "author": "Tousif Iqbal Anik (toiq)",
