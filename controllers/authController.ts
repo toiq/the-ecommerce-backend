@@ -34,7 +34,6 @@ import { sendVerificationEmail } from "../utils/email.js";
 import { NotFoundException } from "../exceptions/not-found.js";
 import { UnauthorizedException } from "../exceptions/unauthorized.js";
 import { generateSessionId } from "../utils/session.js";
-import { ChangePasswordSchema } from "../schema/userSchema.js";
 
 export const register = async (req: Request, res: Response) => {
   const { name, email, password } = RegisterSchema.parse(req.body);
@@ -85,6 +84,11 @@ export const verifyEmail = async (req: Request, res: Response) => {
       name,
       email,
       password: hashedPassword,
+      profile: {
+        create: {
+          defaultAddress: "",
+        },
+      },
     },
   });
 
