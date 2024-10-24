@@ -20,18 +20,33 @@ enum Role {
 }
 
 model User {
+  id        String           @id @default(cuid())
+  name      String
+  email     String           @unique
+  password  String
+  role      Role             @default(USER)
+  profile   Profile?
+  orders    Order[]
+  payment   Payment_detail[]
+  reviews   Reviews[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@map("users")
+}
+
+model Profile {
   id             String    @id @default(cuid())
-  name           String
-  email          String    @unique
+  image          String?
   phone          String?
-  password       String
-  role           Role      @default(USER)
   addresses      Address[]
-  defaultAddress String?
+  defaultAddress String
+  user           User      @relation(fields: [userId], references: [id])
+  userId         String    @unique
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  @@map("users")
+  @@map("profiles")
 }
 
 model Address {
@@ -40,10 +55,101 @@ model Address {
   city      String
   postCode  Int
   details   String
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
+  profile   Profile  @relation(fields: [profileId], references: [id])
+  profileId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("addresses")
+}
+
+model Category {
+  id      String    @id @default(cuid())
+  name    String    @unique
+  product Product[]
+}
+
+model Brand {
+  id    String  @id @default(cuid())
+  image String?
+  name  String  @unique
+}
+
+model Product {
+  id      String  @id @default(cuid())
+  name    String
+  stock   Int
+  price   Int
+  image   String?
+  desc    String
+  cloudId String?
+
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+
+  orderDetail Order_detail[]
+
+  reviews Reviews[]
+}
+
+model Reviews {
+  id      String  @id @default(cuid())
+  comment String?
+  rating  Int
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+}
+
+model Order {
+  id            String          @id @default(cuid())
+  userId        String
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderDetail   Order_detail[]
+  paymentDetail Payment_detail?
+  trackOrder    Track_order?
+  address       String
+  total         Int
+  time          DateTime        @default(now())
+}
+
+model Payment_detail {
+  id       String   @id @default(cuid())
+  amount   Int
+  currency String
+  time     DateTime @default(now())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id])
+  orderId  String   @unique
+  order    Order    @relation(fields: [orderId], references: [id])
+}
+
+model Order_detail {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  subTotal  Int
+  quantity  Int
+  price     Int
+}
+
+model Track_order {
+  id      String @id @default(cuid())
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id])
+  address String
+  status  Status @default(PREPARING)
+}
+
+enum Status {
+  PREPARING
+  SHIPPED
+  DELIVERD
 }
