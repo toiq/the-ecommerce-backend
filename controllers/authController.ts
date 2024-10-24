@@ -90,7 +90,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
     },
   });
 
-  await deleteUserSignUpCache(email, sessionId);
+  await deleteUserSignUpCache(email);
 
   res.status(201).json({
     success: true,
