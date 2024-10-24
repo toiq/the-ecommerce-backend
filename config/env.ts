@@ -6,7 +6,21 @@ dotenv.config({});
 
 export const env = createEnv({
   server: {
+    BACKEND_HOST: z.string(),
     PORT: z.string(),
+    DATABASE_URL: z.string(),
+    SALT_ROUND: z.string(),
+    VERIFICATION_SECRET: z.string(),
+    ACCESS_TOKEN_SECRET: z.string(),
+    REFRESH_TOKEN_SECRET: z.string(),
+    VERIFICATION_TTL: z.string(),
+    ACCESS_TOKEN_TTL: z.string(),
+    REFRESH_TOKEN_TTL: z.string(),
+    REDIS_URL: z.string(),
+    SMTP_HOST: z.string(),
+    SMTP_PORT: z.string(),
+    SMTP_USER: z.string(),
+    SMTP_PASS: z.string(),
   },
 
   /**
