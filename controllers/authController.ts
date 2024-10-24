@@ -6,7 +6,7 @@ import {
   RegisterSchema,
   ResendVerifyEmailSchema,
   ResetPasswordSchema,
-} from "../schema/userSchema.js";
+} from "../schema/authSchema.js";
 import { BadRequestException } from "../exceptions/bad-request.js";
 import { ErrorCode } from "../exceptions/root.js";
 import {
@@ -34,6 +34,7 @@ import { sendVerificationEmail } from "../utils/email.js";
 import { NotFoundException } from "../exceptions/not-found.js";
 import { UnauthorizedException } from "../exceptions/unauthorized.js";
 import { generateSessionId } from "../utils/session.js";
+import { ChangePasswordSchema } from "../schema/userSchema.js";
 
 export const register = async (req: Request, res: Response) => {
   const { name, email, password } = RegisterSchema.parse(req.body);

@@ -35,7 +35,7 @@ authRouter.post("/logout", [authMiddleware("REFRESH")], errorHandler(logout));
 // Forgot password
 authRouter.post("/forgot-password", errorHandler(forgotPassword));
 
-// Forgot password
+// Reset password
 authRouter.post("/reset-password/:userId/:token", errorHandler(resetPassword));
 
 export default authRouter;

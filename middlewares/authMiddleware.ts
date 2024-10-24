@@ -22,10 +22,12 @@ const authMiddleware =
           ? env.ACCESS_TOKEN_SECRET
           : env.REFRESH_TOKEN_SECRET
       );
-
       const tokenCache = await getUserRefreshToken(payload.sessionId);
 
-      console.log({ payload });
+      if (tokenType === "ACCESS") {
+        req.user = payload;
+        return next();
+      }
 
       if (tokenCache !== token) {
         return next(

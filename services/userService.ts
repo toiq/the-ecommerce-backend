@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { RegisterSchema } from "../schema/userSchema.js";
+import { RegisterSchema } from "../schema/authSchema.js";
 import cacheClient from "../dbclients/cacheClient.js";
 import { env } from "../config/env.js";
 import jwt from "jsonwebtoken";

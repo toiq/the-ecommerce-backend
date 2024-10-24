@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { z } from "zod";
-import { RegisterSchema } from "../schema/userSchema.js";
+import { RegisterSchema } from "../schema/authSchema.js";
 import { Role } from "@prisma/client";
 
 export const generateAccessToken = (
