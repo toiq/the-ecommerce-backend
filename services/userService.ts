@@ -10,29 +10,35 @@ export const setUserSignUpCache = async (
   user: z.infer<typeof RegisterSchema>
 ) => {
   // Exp same as verification TTL
-  await cacheClient.set(email, JSON.stringify(user), {
+  await cacheClient.set(email, JSON.stringify({ ...user }), {
     EX: +env.VERIFICATION_TTL,
   });
 };
 
 export const setUserRefreshToken = async (
   email: string,
-  refreshToken: string
+  refreshToken: string,
+  sessionId: string
 ) => {
   // Exp same as refresh token TTL
-  await cacheClient.set(email, refreshToken, { EX: +env.REFRESH_TOKEN_TTL });
+  await cacheClient.set(email + "#" + sessionId, refreshToken, {
+    EX: +env.REFRESH_TOKEN_TTL,
+  });
 };
 
-export const getUserSignUpCache = async (email: string) => {
-  const cacheData = await cacheClient.get(email);
+export const getUserSignUpCache = async (email: string, sessionId?: string) => {
+  // For resending verification, we won't have sessionId
+  const cacheData = await cacheClient.get(
+    sessionId ? email + "#" + sessionId : email
+  );
   if (!cacheData) {
     return null;
   }
   return JSON.parse(cacheData);
 };
 
-export const getUserRefreshToken = async (email: string) => {
-  return await cacheClient.get(email);
+export const getUserRefreshToken = async (email: string, sessionId: string) => {
+  return await cacheClient.get(email + "#" + sessionId);
 };
 
 export const decodePasswordResetToken = (
@@ -61,6 +67,9 @@ export const deleteUserSignUpCache = async (email: string) => {
   await cacheClient.del(email);
 };
 
-export const deleteUserRefreshToken = async (email: string) => {
-  await cacheClient.del(email);
+export const deleteUserRefreshToken = async (
+  email: string,
+  sessionId: string
+) => {
+  await cacheClient.del(email + "#" + sessionId);
 };

@@ -4,16 +4,26 @@ import { z } from "zod";
 import { RegisterSchema } from "../schema/userSchema.js";
 import { Role } from "@prisma/client";
 
-export const generateAccessToken = (email: string, id: string, role: Role) => {
-  const payload = { email: email, id: id, role: role };
+export const generateAccessToken = (
+  email: string,
+  id: string,
+  role: Role,
+  sessionId: string
+) => {
+  const payload = { email: email, id: id, role: role, sessionId: sessionId };
   const secret = env.ACCESS_TOKEN_SECRET;
   const options = { expiresIn: env.ACCESS_TOKEN_TTL };
   const token = jwt.sign(payload, secret, options);
   return token;
 };
 
-export const generateRefreshToken = (email: string, id: string, role: Role) => {
-  const payload = { email: email, id: id, role: role };
+export const generateRefreshToken = (
+  email: string,
+  id: string,
+  role: Role,
+  sessionId: string
+) => {
+  const payload = { email: email, id: id, role: role, sessionId: sessionId };
   const secret = env.REFRESH_TOKEN_SECRET;
   const options = { expiresIn: env.REFRESH_TOKEN_TTL };
   const token = jwt.sign(payload, secret, options);
@@ -44,5 +54,5 @@ export const generatePasswordResetToken = (
 export const decodeVerificationToken = (verificationToken: string) => {
   return jwt.verify(verificationToken, env.VERIFICATION_SECRET) as z.infer<
     typeof RegisterSchema
-  >;
+  > & { sessionId: string };
 };

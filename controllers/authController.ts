@@ -33,6 +33,7 @@ import {
 import { sendVerificationEmail } from "../utils/email.js";
 import { NotFoundException } from "../exceptions/not-found.js";
 import { UnauthorizedException } from "../exceptions/unauthorized.js";
+import { generateSessionId } from "../utils/session.js";
 
 export const register = async (req: Request, res: Response) => {
   const { name, email, password } = RegisterSchema.parse(req.body);
@@ -45,7 +46,7 @@ export const register = async (req: Request, res: Response) => {
     );
   }
 
-  const hashedPassword = await await generateHashedPassword(password);
+  const hashedPassword = await generateHashedPassword(password);
   const verificationToken = generateVerificationToken(email);
   const link = `${env.BACKEND_HOST}/api/auth/verify/${verificationToken}`;
 
@@ -65,10 +66,14 @@ export const register = async (req: Request, res: Response) => {
 
 export const verifyEmail = async (req: Request, res: Response) => {
   const token = req.params.token;
-  const { email: decodedEmail } = decodeVerificationToken(token);
-  const userCache = await getUserSignUpCache(decodedEmail);
+  const { email: decodedEmail, sessionId } = decodeVerificationToken(token);
 
-  if (!decodedEmail || decodedEmail !== userCache?.email) {
+  console.log({ token, decodedEmail });
+  const userCache = await getUserSignUpCache(decodedEmail, sessionId);
+
+  console.log({ userCache });
+
+  if (!decodedEmail || decodedEmail !== userCache?.email?.split("#")?.[0]) {
     throw new BadRequestException(
       "Token is not valid.",
       ErrorCode.INVALID_TOKEN
@@ -85,31 +90,28 @@ export const verifyEmail = async (req: Request, res: Response) => {
     },
   });
 
-  await deleteUserSignUpCache(email);
-
-  const accessToken = generateAccessToken(
-    newUser.email,
-    newUser.id,
-    newUser.role
-  );
-  const refreshToken = generateRefreshToken(
-    newUser.email,
-    newUser.id,
-    newUser.role
-  );
-  await setUserRefreshToken(email, refreshToken);
+  await deleteUserSignUpCache(email, sessionId);
 
   res.status(201).json({
     success: true,
-    message: {
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    },
+    message: "Email successfully verified. You may login now.",
   });
 };
 
 export const resendVerifyEmail = async (req: Request, res: Response) => {
   const { email } = ResendVerifyEmailSchema.parse(req.body);
+
+  const user = await prismaClient.user.findUnique({
+    where: { email },
+  });
+
+  if (user) {
+    throw new BadRequestException(
+      "User already exists!",
+      ErrorCode.USER_ALREADY_EXISTS
+    );
+  }
+
   const userCache = await getUserSignUpCache(email);
   if (!userCache) {
     throw new BadRequestException("Invalid request", ErrorCode.EMAIL_NOT_FOUND);
@@ -146,9 +148,21 @@ export const login = async (req: Request, res: Response) => {
     );
   }
 
-  const accessToken = generateAccessToken(user.email, user.id, user.role);
-  const refreshToken = generateRefreshToken(user.email, user.id, user.role);
-  await setUserRefreshToken(email, refreshToken);
+  const newSessionId = generateSessionId();
+
+  const accessToken = generateAccessToken(
+    user.email,
+    user.id,
+    user.role,
+    newSessionId
+  );
+  const refreshToken = generateRefreshToken(
+    user.email,
+    user.id,
+    user.role,
+    newSessionId
+  );
+  await setUserRefreshToken(email, refreshToken, newSessionId);
 
   res.status(200).json({
     success: true,
@@ -160,10 +174,10 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const refresh = async (req: Request, res: Response) => {
-  const { email, id, role } = req.user;
-  const accessToken = generateAccessToken(email, id, role);
-  const refreshToken = generateRefreshToken(email, id, role);
-  await setUserRefreshToken(email, refreshToken);
+  const { email, id, role, sessionId } = req.user;
+  const accessToken = generateAccessToken(email, id, role, sessionId);
+  const refreshToken = generateRefreshToken(email, id, role, sessionId);
+  await setUserRefreshToken(email, refreshToken, sessionId);
 
   res.status(200).json({
     success: true,
@@ -175,8 +189,8 @@ export const refresh = async (req: Request, res: Response) => {
 };
 
 export const logout = async (req: Request, res: Response) => {
-  const { email } = req.user;
-  await deleteUserRefreshToken(email);
+  const { email, sessionId } = req.user;
+  await deleteUserRefreshToken(email, sessionId);
 
   res.status(200).json({
     success: true,
@@ -224,14 +238,8 @@ export const resetPassword = async (req: Request, res: Response) => {
   if (!decoded)
     throw new BadRequestException("Invalid token", ErrorCode.INVALID_TOKEN);
   const { email, id, role } = await updateUserPassword(userId, hashedPassword);
-  const accessToken = await generateAccessToken(email, id, role);
-  const refreshToken = await generateRefreshToken(email, id, role);
-  await setUserRefreshToken(email, refreshToken);
+
   res.status(200).json({
     success: true,
-    message: {
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    },
   });
 };
