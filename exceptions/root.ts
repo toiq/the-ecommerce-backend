@@ -40,6 +40,14 @@ export enum ErrorCode {
   PRODUCT_PRICE_MISMATCH = 2002,
   INVALID_PRODUCT_ID = 2003,
 
+  // Category-related errors
+  CATEGORY_NOT_FOUND = 2004,
+  CATEGORY_ALREADY_EXISTS = 2005,
+
+  // Brand-related errors
+  BRAND_NOT_FOUND = 2006,
+  BRAND_ALREADY_EXISTS = 2007,
+
   // Payment-related errors
   PAYMENT_FAILED = 3000,
   PAYMENT_METHOD_NOT_SUPPORTED = 3001,

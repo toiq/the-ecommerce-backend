@@ -64,15 +64,16 @@ model Address {
 }
 
 model Category {
-  id      String    @id @default(cuid())
-  name    String    @unique
-  product Product[]
+  id       String    @id @default(cuid())
+  name     String    @unique
+  products Product[]
 }
 
 model Brand {
-  id    String  @id @default(cuid())
-  image String?
-  name  String  @unique
+  id       String    @id @default(cuid())
+  image    String?
+  name     String    @unique
+  products Product[]
 }
 
 model Product {
@@ -84,8 +85,9 @@ model Product {
   desc    String
   cloudId String?
 
-  category   Category @relation(fields: [categoryId], references: [id])
-  categoryId String
+  brand      Brand      @relation(fields: [brandId], references: [id])
+  brandId    String
+  categories Category[]
 
   orderDetail Order_detail[]
 
