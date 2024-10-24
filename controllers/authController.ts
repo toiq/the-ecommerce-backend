@@ -66,14 +66,11 @@ export const register = async (req: Request, res: Response) => {
 
 export const verifyEmail = async (req: Request, res: Response) => {
   const token = req.params.token;
-  const { email: decodedEmail, sessionId } = decodeVerificationToken(token);
+  const { email: decodedEmail } = decodeVerificationToken(token);
 
-  console.log({ token, decodedEmail });
-  const userCache = await getUserSignUpCache(decodedEmail, sessionId);
+  const userCache = await getUserSignUpCache(decodedEmail);
 
-  console.log({ userCache });
-
-  if (!decodedEmail || decodedEmail !== userCache?.email?.split("#")?.[0]) {
+  if (!decodedEmail || decodedEmail !== userCache?.email) {
     throw new BadRequestException(
       "Token is not valid.",
       ErrorCode.INVALID_TOKEN
@@ -162,7 +159,7 @@ export const login = async (req: Request, res: Response) => {
     user.role,
     newSessionId
   );
-  await setUserRefreshToken(email, refreshToken, newSessionId);
+  await setUserRefreshToken(refreshToken, newSessionId);
 
   res.status(200).json({
     success: true,
@@ -177,7 +174,7 @@ export const refresh = async (req: Request, res: Response) => {
   const { email, id, role, sessionId } = req.user;
   const accessToken = generateAccessToken(email, id, role, sessionId);
   const refreshToken = generateRefreshToken(email, id, role, sessionId);
-  await setUserRefreshToken(email, refreshToken, sessionId);
+  await setUserRefreshToken(refreshToken, sessionId);
 
   res.status(200).json({
     success: true,
@@ -190,7 +187,7 @@ export const refresh = async (req: Request, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
   const { email, sessionId } = req.user;
-  await deleteUserRefreshToken(email, sessionId);
+  await deleteUserRefreshToken(sessionId);
 
   res.status(200).json({
     success: true,

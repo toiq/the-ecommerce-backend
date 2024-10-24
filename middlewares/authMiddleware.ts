@@ -23,10 +23,7 @@ const authMiddleware =
           : env.REFRESH_TOKEN_SECRET
       );
 
-      const tokenCache = await getUserRefreshToken(
-        payload.email,
-        payload.sessionId
-      );
+      const tokenCache = await getUserRefreshToken(payload.sessionId);
 
       console.log({ payload });
 
