@@ -34,7 +34,7 @@ export const cloudUploadMiddleware = (
       try {
         // Process each field individually
         for (const field of fields) {
-          const file = (req.files as { [key: string]: any })?.[field.name]?.[0];
+          const file = req.files?.[field.name]?.[0];
 
           if (file) {
             const uploadStream = cloudinary.uploader.upload_stream(

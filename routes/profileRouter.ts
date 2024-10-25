@@ -8,6 +8,7 @@ import {
   updateProfile,
 } from "../controllers/profileController.js";
 import errorHandler from "../handlers/error-handler.js";
+import { cloudUploadMiddleware } from "../middlewares/cloudUploadMiddleware.js";
 
 const profileRouter: Router = Router();
 
@@ -15,7 +16,21 @@ const profileRouter: Router = Router();
 profileRouter.get("/", [authMiddleware("ACCESS")], errorHandler(getProfile));
 
 // Update the authenticated user's profile
-profileRouter.put("/", [authMiddleware("ACCESS")], errorHandler(updateProfile));
+profileRouter.put(
+  "/",
+  [
+    authMiddleware("ACCESS"),
+    cloudUploadMiddleware(
+      [
+        {
+          name: "profile-image",
+        },
+      ],
+      "profile"
+    ),
+  ],
+  errorHandler(updateProfile)
+);
 
 // Add a new address to the user's profile
 profileRouter.post(

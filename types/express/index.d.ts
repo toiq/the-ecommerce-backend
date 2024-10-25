@@ -5,8 +5,13 @@ declare global {
     export interface Request {
       user?: any;
       fileUrl?: string;
-      fileUrls?: any;
-      files?: { [fieldname: string]: any };
+      fileUrls?: { [key: string]: string };
     }
+  }
+}
+
+declare module "express-serve-static-core" {
+  interface Request {
+    files?: { [key: string]: Express.Multer.File[] };
   }
 }

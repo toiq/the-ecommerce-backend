@@ -42,11 +42,16 @@ export const updateProfile = async (req: Request, res: Response) => {
     );
   }
 
+  const image = req.fileUrls?.["profile-image"] || null;
+
   const updatedProfile = await prismaClient.profile.update({
     where: {
       userId: req.user.id,
     },
-    data,
+    data: {
+      ...data,
+      ...(image && { image }), // Only include image if it exists
+    },
   });
 
   res.status(200).json({
