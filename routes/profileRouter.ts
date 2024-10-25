@@ -26,7 +26,7 @@ profileRouter.put(
           name: "profile-image",
         },
       ],
-      "profile"
+      "profiles"
     ),
   ],
   errorHandler(updateProfile)
