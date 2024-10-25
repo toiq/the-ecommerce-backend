@@ -31,46 +31,51 @@ export const cloudUploadMiddleware = (
 
       req.fileUrls = {};
 
+      const uploadPromises: Promise<void>[] = [];
+
       try {
         // Process each field individually
         for (const field of fields) {
           const file = req.files?.[field.name]?.[0];
 
           if (file) {
-            const uploadStream = cloudinary.uploader.upload_stream(
-              {
-                folder: `${env.CLOUDINARY_FOLDER_PREFIX}-${folder}`,
-                use_filename: true,
-                unique_filename: true,
-              },
-              (uploadError, result) => {
-                if (uploadError) {
-                  return res
-                    .status(500)
-                    .json({ error: "Cloudinary upload failed" });
-                }
-                // Store Cloudinary URL in fileUrls with field name as key
-                if (result) {
-                  if (req.fileUrls)
+            const uploadPromise = new Promise<void>((resolve, reject) => {
+              const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                  folder: `${env.CLOUDINARY_FOLDER_PREFIX}-${folder}`,
+                  use_filename: true,
+                  unique_filename: true,
+                },
+                (uploadError, result) => {
+                  if (uploadError) {
+                    return reject(
+                      new BadRequestException(
+                        "Cloudinary upload failed",
+                        ErrorCode.INTERNAL_SERVER_ERROR
+                      )
+                    );
+                  }
+
+                  // Store Cloudinary URL in fileUrls with field name as key
+                  if (result && req.fileUrls) {
                     req.fileUrls[field.name] = result.secure_url;
-                } else {
-                  return next(
-                    new BadRequestException(
-                      "Failed to upload",
-                      ErrorCode.FAILED_TO_UPLOAD
-                    )
-                  );
+                    resolve();
+                  } else {
+                    reject(
+                      new BadRequestException(
+                        "Failed to upload",
+                        ErrorCode.FAILED_TO_UPLOAD
+                      )
+                    );
+                  }
                 }
+              );
 
-                // If it's the last file being processed, call next()
-                if (fields.indexOf(field) === fields.length - 1) {
-                  next();
-                }
-              }
-            );
+              // Pipe the file buffer to Cloudinary's upload stream
+              uploadStream.end(file.buffer);
+            });
 
-            // Pipe the file buffer to Cloudinary's upload stream
-            uploadStream.end(file.buffer);
+            uploadPromises.push(uploadPromise);
           } else if (field.optional === false) {
             // Return error if a required field is missing
             return next(
@@ -81,6 +86,12 @@ export const cloudUploadMiddleware = (
             );
           }
         }
+
+        // Wait for all uploads to finish
+        await Promise.all(uploadPromises);
+
+        // Call next only after all uploads have been processed
+        next();
       } catch (uploadError) {
         return next(
           new BadRequestException(
