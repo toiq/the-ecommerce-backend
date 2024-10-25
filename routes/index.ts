@@ -4,6 +4,7 @@ import authRouter from "./authRouter.js";
 import profileRouter from "./profileRouter.js";
 import categoryRouter from "./categoryRouter.js";
 import brandRouter from "./brandRouter.js";
+import productRouter from "./productRouter.js";
 
 const rootRouter: Router = Router();
 
@@ -12,5 +13,6 @@ rootRouter.use("/users", userRouter);
 rootRouter.use("/profile", profileRouter);
 rootRouter.use("/categories", categoryRouter);
 rootRouter.use("/brands", brandRouter);
+rootRouter.use("/products", productRouter);
 
 export default rootRouter;

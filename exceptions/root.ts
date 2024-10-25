@@ -28,6 +28,9 @@ export enum ErrorCode {
   USER_ACCOUNT_LOCKED = 1004,
   INVALID_TOKEN = 1005,
   EMAIL_NOT_FOUND = 1006,
+  BAD_FILE_FORMAT = 1007,
+  FILE_TOO_LARGE = 1008,
+  FAILED_TO_UPLOAD = 1009,
 
   // Address-related errors
   ADDRESS_NOT_FOUND = 1100,
