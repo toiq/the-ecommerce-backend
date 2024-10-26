@@ -40,8 +40,6 @@ export const updateProfile = async (req: Request, res: Response) => {
     },
   });
 
-  console.log({ isUsersAddress });
-
   if (!isUsersAddress) {
     throw new BadRequestException(
       "The address does not belong to the user.",

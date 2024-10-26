@@ -29,6 +29,7 @@ model User {
   orders    Order[]
   payment   Payment_detail[]
   reviews   Reviews[]
+  cart      Cart?
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
@@ -66,6 +67,29 @@ model Address {
   updatedAt DateTime @updatedAt
 
   @@map("addresses")
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  total     Int        @default(0)
+  cartItems CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+  price     Int
+
+  @@unique([cartId, productId])
 }
 
 model Category {
@@ -107,8 +131,9 @@ model Product {
   wishlistByProfile   Profile? @relation(fields: [wishlistByProfileId], references: [id], onDelete: Cascade)
   wishlistByProfileId String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  CartItem  CartItem[]
 }
 
 model Reviews {

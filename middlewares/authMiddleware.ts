@@ -41,7 +41,6 @@ const authMiddleware =
         next();
       }
     } catch (error) {
-      console.log({ error });
       return next(
         new UnauthorizedException("Unauthorized", ErrorCode.UNAUTHORIZED_ACCESS)
       );

@@ -89,6 +89,9 @@ export const verifyEmail = async (req: Request, res: Response) => {
           defaultAddressId: null,
         },
       },
+      cart: {
+        create: {},
+      },
     },
   });
 

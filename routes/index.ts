@@ -7,6 +7,7 @@ import brandRouter from "./brandRouter.js";
 import productRouter from "./productRouter.js";
 import wishlistRouter from "./wishlistRouter.js";
 import reviewRouter from "./reviewRouter.js";
+import cartRouter from "./cartRouter.js";
 
 const rootRouter: Router = Router();
 
@@ -18,5 +19,6 @@ rootRouter.use("/categories", categoryRouter);
 rootRouter.use("/brands", brandRouter);
 rootRouter.use("/products", productRouter);
 rootRouter.use("/reviews", reviewRouter);
+rootRouter.use("/cart", cartRouter);
 
 export default rootRouter;
