@@ -31,6 +31,7 @@ export enum ErrorCode {
   BAD_FILE_FORMAT = 1007,
   FILE_TOO_LARGE = 1008,
   FAILED_TO_UPLOAD = 1009,
+  WISHLIST_NOT_FOUND = 1010,
 
   // Address-related errors
   ADDRESS_NOT_FOUND = 1100,
