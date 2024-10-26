@@ -12,6 +12,7 @@ export const getProfile = async (req: Request, res: Response) => {
       userId: req.user.id,
     },
     include: {
+      defaultAddress: true,
       addresses: true,
     },
   });
@@ -26,23 +27,27 @@ export const getProfile = async (req: Request, res: Response) => {
 export const updateProfile = async (req: Request, res: Response) => {
   const data = ProfileSchema.parse(req.body);
 
-  let isUserAddress;
-  if (data.defaultAddress) {
-    isUserAddress = await prismaClient.address.findFirst({
-      where: {
-        id: data.defaultAddress,
-      },
-    });
-  }
+  const image = req.fileUrls?.["profile-image"] || undefined;
 
-  if (!isUserAddress && data.defaultAddress) {
+  const isUsersAddress = await prismaClient.profile.findFirst({
+    where: {
+      addresses: {
+        some: {
+          id: data.defaultAddress,
+        },
+      },
+      userId: req.user.id,
+    },
+  });
+
+  console.log({ isUsersAddress });
+
+  if (!isUsersAddress) {
     throw new BadRequestException(
-      "Address does not belong to user.",
+      "The address does not belong to the user.",
       ErrorCode.ADDRESS_DOES_NOT_BELONG
     );
   }
-
-  const image = req.fileUrls?.["profile-image"] || null;
 
   const updatedProfile = await prismaClient.profile.update({
     where: {
@@ -50,7 +55,14 @@ export const updateProfile = async (req: Request, res: Response) => {
     },
     data: {
       ...data,
-      ...(image && { image }), // Only include image if it exists
+      image,
+      defaultAddress: data.defaultAddress
+        ? {
+            connect: {
+              id: data.defaultAddress,
+            },
+          }
+        : undefined, // Set undefined if there's no address to connect
     },
   });
 

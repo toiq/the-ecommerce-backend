@@ -36,27 +36,30 @@ model User {
 }
 
 model Profile {
-  id             String    @id @default(cuid())
-  image          String?
-  phone          String?
-  addresses      Address[]
-  defaultAddress String?
-  user           User      @relation(fields: [userId], references: [id])
-  userId         String    @unique
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  image            String?
+  phone            String?
+  addresses        Address[] @relation("allAddresses")
+  defaultAddress   Address?  @relation("defaultAddress", fields: [defaultAddressId], references: [id])
+  defaultAddressId String?   @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           String    @unique
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@map("profiles")
 }
 
 model Address {
-  id        String   @id @default(cuid())
-  district  String
-  city      String
-  postCode  Int
-  details   String
-  profile   Profile  @relation(fields: [profileId], references: [id])
-  profileId String
+  id                      String   @id @default(cuid())
+  district                String
+  city                    String
+  postCode                Int
+  details                 String
+  profile                 Profile  @relation("allAddresses", fields: [profileId], references: [id], onDelete: Cascade)
+  profileId               String
+  defaultAddressByProfile Profile? @relation("defaultAddress")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -77,13 +80,12 @@ model Brand {
 }
 
 model Product {
-  id      String  @id @default(cuid())
-  name    String
-  stock   Int
-  price   Int
-  image   String?
-  desc    String
-  cloudId String?
+  id    String  @id @default(cuid())
+  name  String
+  stock Int
+  price Int
+  image String?
+  desc  String
 
   brand      Brand      @relation(fields: [brandId], references: [id])
   brandId    String
@@ -103,7 +105,7 @@ model Reviews {
   user   User   @relation(fields: [userId], references: [id])
 
   productId String
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
 }

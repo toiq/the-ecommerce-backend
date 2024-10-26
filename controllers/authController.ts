@@ -86,7 +86,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
       password: hashedPassword,
       profile: {
         create: {
-          defaultAddress: "",
+          defaultAddressId: null,
         },
       },
     },
