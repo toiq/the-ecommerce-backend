@@ -52,6 +52,10 @@ export enum ErrorCode {
   BRAND_NOT_FOUND = 2006,
   BRAND_ALREADY_EXISTS = 2007,
 
+  // Review-related errors
+  REVIEW_ALREADY_EXISTS = 2008,
+  REVIEW_NOT_FOUND = 2009,
+
   // Payment-related errors
   PAYMENT_FAILED = 3000,
   PAYMENT_METHOD_NOT_SUPPORTED = 3001,

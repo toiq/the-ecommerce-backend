@@ -101,7 +101,8 @@ model Product {
 
   orderDetail Order_detail[]
 
-  reviews Reviews[]
+  avgRating Float?    @default(0)
+  reviews   Reviews[]
 
   wishlistByProfile   Profile? @relation(fields: [wishlistByProfileId], references: [id], onDelete: Cascade)
   wishlistByProfileId String?
